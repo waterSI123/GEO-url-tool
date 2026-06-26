@@ -452,7 +452,12 @@ export function reportPdfFilename(report: DiagnosticReport) {
 export async function renderReportPdf(report: DiagnosticReport) {
   const doc = createDoc();
   const chunks: Buffer[] = [];
-  doc.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+
+  const result = new Promise<Buffer>((resolve, reject) => {
+    doc.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+  });
 
   drawHeader(doc, report);
   drawHero(doc, report);
@@ -464,8 +469,5 @@ export async function renderReportPdf(report: DiagnosticReport) {
   writePageNumbers(doc);
   doc.end();
 
-  return new Promise<Buffer>((resolve, reject) => {
-    doc.on("end", () => resolve(Buffer.concat(chunks)));
-    doc.on("error", reject);
-  });
+  return result;
 }
