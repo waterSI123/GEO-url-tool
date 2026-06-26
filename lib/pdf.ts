@@ -1,8 +1,10 @@
 import fs from "node:fs";
+import path from "node:path";
 import PDFDocument from "pdfkit";
 import type { DiagnosticReport, RiskLevel } from "./types";
 
 const FONT_CANDIDATES = [
+  path.join(process.cwd(), "fonts/NotoSansSC-Regular.ttf"),
   "/Library/Fonts/Arial Unicode.ttf",
   "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
   "/System/Library/Fonts/Hiragino Sans GB.ttc",
