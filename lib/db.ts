@@ -26,9 +26,9 @@ const { DatabaseSync } = require("node:sqlite") as {
 let db: Database | null = null;
 
 function dataPath() {
-  const dir = path.join(process.cwd(), "data");
-  fs.mkdirSync(dir, { recursive: true });
-  return path.join(dir, "readiness.sqlite");
+  const base = process.env.VERCEL ? "/tmp" : path.join(process.cwd(), "data");
+  fs.mkdirSync(base, { recursive: true });
+  return path.join(base, "readiness.sqlite");
 }
 
 function now() {
