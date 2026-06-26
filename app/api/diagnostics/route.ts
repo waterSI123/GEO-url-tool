@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { createJob } from "@/lib/db";
+import { createJob, getBundle } from "@/lib/db";
 import { normalizeUrl } from "@/lib/http";
-import { startDiagnosticJob } from "@/lib/diagnostic";
+import { runDiagnostic } from "@/lib/diagnostic";
 import type { DiagnosticInput } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 function cleanText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -32,12 +33,15 @@ export async function POST(request: Request) {
     const payload = (await request.json()) as Record<string, unknown>;
     const input = validate(payload);
     const job = createJob(input);
-    startDiagnosticJob(job.id);
+    await runDiagnostic(job.id);
+
+    const bundle = getBundle(job.id);
 
     return NextResponse.json({
       jobId: job.id,
-      status: job.status,
-      reportUrl: `/report/${job.id}`
+      status: "completed",
+      reportUrl: `/report/${job.id}`,
+      bundle
     });
   } catch (error) {
     return NextResponse.json(

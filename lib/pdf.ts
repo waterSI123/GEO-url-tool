@@ -5,7 +5,9 @@ import type { DiagnosticReport, RiskLevel } from "./types";
 const FONT_CANDIDATES = [
   "/Library/Fonts/Arial Unicode.ttf",
   "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
-  "/System/Library/Fonts/Hiragino Sans GB.ttc"
+  "/System/Library/Fonts/Hiragino Sans GB.ttc",
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+  "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc"
 ];
 
 const COLORS = {
@@ -85,8 +87,12 @@ function createDoc() {
   if (fontPath) {
     doc.registerFont("ReportFont", fontPath);
     doc.registerFont("ReportFontBold", fontPath);
+    doc.font("ReportFont");
+  } else {
+    doc.registerFont("ReportFont", "Helvetica");
+    doc.registerFont("ReportFontBold", "Helvetica-Bold");
+    doc.font("ReportFont");
   }
-  doc.font("ReportFont");
   fillPageBackground(doc);
   doc.on("pageAdded", () => {
     fillPageBackground(doc);

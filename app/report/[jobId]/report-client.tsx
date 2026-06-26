@@ -22,8 +22,27 @@ function statusText(status: number | null) {
   return status === null ? "失败" : String(status);
 }
 
-function downloadPdf(jobId: string) {
-  window.location.href = `/api/diagnostics/${jobId}/pdf`;
+function downloadPdf(report: DiagnosticReport) {
+  fetch(`/api/diagnostics/${report.jobId}/pdf`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(report)
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error("PDF 生成失败");
+      return res.blob();
+    })
+    .then((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${report.websiteUrl.replace(/^https?:\/\//, "").replace(/[^a-z0-9.-]+/gi, "-")}-geo-readiness.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    })
+    .catch(() => {
+      alert("PDF 下载失败，请重试");
+    });
 }
 
 function ReportContent({ report }: { report: DiagnosticReport }) {
@@ -46,7 +65,7 @@ function ReportContent({ report }: { report: DiagnosticReport }) {
             {report.websiteUrl} · 生成时间 {new Date(report.generatedAt).toLocaleString()}
           </p>
         </div>
-        <button className="secondary-btn no-print" type="button" onClick={() => downloadPdf(report.jobId)}>
+        <button className="secondary-btn no-print" type="button" onClick={() => downloadPdf(report)}>
           下载 PDF
         </button>
       </div>
@@ -355,6 +374,22 @@ export default function ReportClient({ jobId }: { jobId: string }) {
 
     async function load() {
       try {
+        const cached = sessionStorage.getItem(`geo_report_${jobId}`);
+        if (cached) {
+          sessionStorage.removeItem(`geo_report_${jobId}`);
+          const payload = JSON.parse(cached);
+          if (!alive) return;
+          setBundle(payload);
+          if (payload.job?.status === "completed") {
+            setState("ready");
+            return;
+          }
+          if (payload.job?.status === "failed") {
+            setState("failed");
+            return;
+          }
+        }
+
         const response = await fetch(`/api/diagnostics/${jobId}`, {
           cache: "no-store"
         });

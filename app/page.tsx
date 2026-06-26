@@ -24,6 +24,9 @@ export default function HomePage() {
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "创建诊断任务失败");
+      if (payload.bundle) {
+        sessionStorage.setItem(`geo_report_${payload.jobId}`, JSON.stringify(payload.bundle));
+      }
       router.push(payload.reportUrl);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "创建诊断任务失败");
@@ -69,7 +72,7 @@ export default function HomePage() {
                 required
               />
               <button className="primary-btn" type="submit" disabled={loading}>
-                {loading ? "正在创建..." : "生成报告"}
+                {loading ? "正在诊断中..." : "生成报告"}
               </button>
             </div>
             <p className="form-hint">可以不带 https://。报告生成后支持直接下载 PDF 文件。</p>
